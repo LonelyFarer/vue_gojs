@@ -1,4 +1,4 @@
-# vue_cli_2_gojs_demo
+# vue_gojs
 
 * 根据官方demo做的例子，官方demo地址：https://gojs.net/latest/samples/vue.html
 
