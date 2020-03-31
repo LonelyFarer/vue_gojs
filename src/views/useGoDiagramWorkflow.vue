@@ -1,23 +1,26 @@
 <template>
 <div style="width: 80%;text-align: left;margin:auto">
     <diagram ref='diag' :model-data='diagramData' @model-changed='modelChanged' @changed-selection='changedSelection' @text-edited="textEdited" @modified="modified" style='width:100%; height:420px'></diagram>
-    <button @click='addNode'>Add Child to Gamma</button>
+    <!-- <triangle ref='diag' :model-data='diagramData' @model-changed='modelChanged' @changed-selection='changedSelection' @text-edited="textEdited" @modified="modified" style='width:100%; height:420px'></triangle> -->
+    
+    <!-- <button @click='addNode'>Add Child to Gamma</button>
     <button @click='modifyStuff'>Modify view model data without undo</button>
     <br/>Current Node:
-    <input v-model.lazy='currentNodeText' :disabled='currentNode === null'/>
+    <input v-model.lazy='currentNodeText' :disabled='currentNode === null'/> -->
     <br/>The saved GoJS Model:
-    <!--<textarea style='width:100%;height:250px'>{{ savedModelText }}</textarea>-->
+    
     <textarea style='width:100%;height:200px' v-model="savedModelText"></textarea>
 </div>
 </template>
 
 <script>
 import diagram from '../components/GoDiagramWorkflow'
-
+import triangle from '../components/triangle'
 export default {
     name: '',
     components: {
-        diagram
+        diagram,
+        triangle
     },
     data () {
         return {
@@ -34,29 +37,31 @@ export default {
                 'linkFromPortIdProperty': 'fromPort',
                 'linkToPortIdProperty': 'toPort',
                 'nodeDataArray': [
-                    {
-                        'category': 'Command',
-                        'text': 'Command1',
-                        'key': -2,
-                        'loc': '-202.90624999999994 -369.4999999999998'
-                    },
-                    {
-                        'category': 'Command',
-                        'title': 'tsfsfsfsfsfsf',
-                        'text': 'Command2',
-                        'key': -3,
-                        'loc': '-109.79687500000006 -248.24999999999994'
-                    }
+                    // {
+                    //     'category': 'Command',
+                    //     'text': 'Command1',
+                    //     'key': -2,
+                    //     'loc': '-202.90624999999994 -369.4999999999998'
+                    // },
+                    // {
+                    //     'category': 'Command',
+                    //     'title': 'tsfsfsfsfsfsf',
+                    //     'text': 'Command2',
+                    //     'key': -3,
+                    //     'loc': '-109.79687500000006 -248.24999999999994'
+                    // }
                 ],
-                'linkDataArray': [{
-                    'from': -2,
-                    'to': -3,
-                    'fromPort': 'B',
-                    'toPort': 'T',
-                    // 'text': 'up or timer',
-                    'curviness': -20,
-                    'points': [-202.90625, -353.06227569580085, -202.90625, -343.06227569580085, -202.90625, -308.875, -109.796875, -308.875, -109.796875, -274.6877243041992, -109.796875, -264.6877243041992]
-                }]
+                'linkDataArray': [
+                // {
+                //     'from': -2,
+                //     'to': -3,
+                //     'fromPort': 'B',
+                //     'toPort': 'T',
+                //     // 'text': 'up or timer',
+                //     'curviness': -20,
+                //     'points': [-202.90625, -353.06227569580085, -202.90625, -343.06227569580085, -202.90625, -308.875, -109.796875, -308.875, -109.796875, -274.6877243041992, -109.796875, -264.6877243041992]
+                // }
+                ]
             },
             currentNode: null,
             savedModelText: '',

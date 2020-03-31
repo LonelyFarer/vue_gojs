@@ -141,21 +141,21 @@ export default {
                     {isPanelMain: true, strokeWidth: 8, stroke: 'transparent', name: 'HIGHLIGHT'}),
                 $(go.Shape, // the link path shape
                     {isPanelMain: true, stroke: 'gray', strokeWidth: 2}),
-                $(go.Shape, // the arrowhead
-                    {toArrow: 'standard', stroke: null, fill: 'gray'}),
+                // $(go.Shape, // the arrowhead
+                //     {toArrow: 'standard', stroke: null, fill: 'gray'}),
                 $(go.Panel, 'Auto', // the link label, normally not visible
                     {visible: true, name: 'LABEL', segmentIndex: 2, segmentFraction: 0.5},
                     new go.Binding('visible', 'visible').makeTwoWay(),
-                    $(go.Shape, // the label shape
-                        {fill: $(go.Brush, 'Radial', { 0: 'rgb(240, 240, 240)', 0.3: 'rgb(240, 240, 240)', 1: 'rgba(240, 240, 240, 0)' }), stroke: null}),
-                    $(go.TextBlock, 'Yes', // the label
-                        {
-                            textAlign: 'center',
-                            font: '10pt helvetica, arial, sans-serif',
-                            stroke: '#333333',
-                            editable: false
-                        },
-                        new go.Binding('text').makeTwoWay())
+                    // $(go.Shape, // the label shape
+                    //     {fill: $(go.Brush, 'Radial', { 0: 'rgb(240, 240, 240)', 0.3: 'rgb(240, 240, 240)', 1: 'rgba(240, 240, 240, 0)' }), stroke: null}),
+                    // $(go.TextBlock, 'Yes', // the label
+                    //     {
+                    //         textAlign: 'center',
+                    //         font: '10pt helvetica, arial, sans-serif',
+                    //         stroke: '#333333',
+                    //         editable: false
+                    //     },
+                    //     new go.Binding('text').makeTwoWay())
                 )
             )
         let myPalette =

@@ -5,7 +5,7 @@
         <router-link to="/workflow2" style="margin-right: 10px;">workflow demo2(输入框有2个)</router-link>
         <router-link to="/tree_layout" style="margin-right: 10px;">TreeLayout demo</router-link>
         <router-link to="/sandglass" style="margin-right: 10px;">sandglass</router-link>
-        <router-link to="/hello" style="margin-right: 10px;">hello</router-link>
+        <router-link to="/gojs" style="margin-right: 10px;">gojs</router-link>
         <div>======下面是内容=======</div>
         <router-view/>
     </div>

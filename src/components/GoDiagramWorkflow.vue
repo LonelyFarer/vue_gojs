@@ -45,9 +45,9 @@ export default {
                     allowDrop: true
                 })
         myDiagram.nodeTemplateMap.add('',
-            $(window.go.Node, 'Vertical',
-                // $(go.Panel, "Vertical",
-                new go.Binding('itemArray', 'items'),
+            $(window.go.Node, 'Vertical', this.nodeStyle(),
+               
+                new go.Binding('itemArray', 'verticalItems'),
                 {
                     itemTemplate:
                     $(go.Panel, 'Auto',
@@ -63,39 +63,45 @@ export default {
                             new go.Binding('height', 'h'),
                             new go.Binding('width', 'w')
 
-                        )
+                        ),
+                        this.makePort('L', go.Spot.Left, true, true),
+                        this.makePort('R', go.Spot.Right, true, true)
                     )
-                }
-                // )
+                },
             )
-            // $(go.Node, 'Spot', this.nodeStyle(),
-            //     $(go.Panel, 'Auto',
-            //         $(go.Shape, 'Rectangle',
-            //             {fill: '#00A9C9', stroke: null},
-            //             new go.Binding('figure', 'figure')),
-            //         $(go.TextBlock, 'command',
-            //             {
-            //                 font: 'bold 11pt Helvetica, Arial, sans-serif',
-            //                 stroke: 'whitesmoke',
-            //                 margin: 8,
-            //                 maxSize: new go.Size(160, NaN),
-            //                 wrap: go.TextBlock.WrapFit,
-            //                 editable: true
-            //             },
-            //             new go.Binding('text').makeTwoWay())
-            //     ),
-            //     // four named ports, one on each side:
-            //     this.makePort('T', go.Spot.Top, false, true),
-            //     this.makePort('L', go.Spot.Left, true, true),
-            //     this.makePort('R', go.Spot.Right, true, true),
-            //     this.makePort('B', go.Spot.Bottom, true, false)
-            // )
         )
+
+        myDiagram.nodeTemplateMap.add('',
+            $(window.go.Node, 'Horizontal', this.nodeStyle(),
+                new go.Binding('itemArray', 'horizontalItems'),
+                {
+                    itemTemplate:
+                    $(go.Panel, 'Auto',
+                        $(go.Shape,
+                            {
+                                figure: 'TriangleDown',
+                                fill: '#91E3E0',
+                                width: 20,
+                                height: 20,
+                                toSpot: go.Spot.Left,
+                            },
+                            new go.Binding('fill', 'color'),
+                            new go.Binding('figure', 'type'),
+                            new go.Binding('height', 'h'),
+                            new go.Binding('width', 'w'),
+                            
+                        ),
+                        this.makePort('L', go.Spot.Left, true, true),
+                        this.makePort('R', go.Spot.Right, true, true)
+                    ) 
+                    
+                }
+            )
+        )
+
 
         myDiagram.linkTemplate =
             $(go.Link,
-                $(go.TextBlock, // this is a Link label
-                    new go.Binding('text', 'text')),
                 // the whole link panel
                 {
                     routing: go.Link.AvoidsNodes,
@@ -106,35 +112,24 @@ export default {
                     relinkableTo: true,
                     reshapable: true,
                     resegmentable: true,
-                    // mouse-overs subtly highlight links:
+                   
                     mouseEnter: function (e, link) {
                         link.findObject('HIGHLIGHT').stroke = 'rgba(30,144,255,0.2)'
                     },
                     mouseLeave: function (e, link) {
                         link.findObject('HIGHLIGHT').stroke = 'transparent'
                     }
-                }
-                // new go.Binding('points').makeTwoWay(),
-                // $(go.Shape, // the highlight shape, normally transparent
-                //     {isPanelMain: true, strokeWidth: 8, stroke: 'transparent', name: 'HIGHLIGHT'}),
-                // $(go.Shape, // the link path shape
-                //     {isPanelMain: true, stroke: 'gray', strokeWidth: 2}),
-                // $(go.Shape, // the arrowhead
-                //     {toArrow: 'standard', stroke: null, fill: 'gray'}),
-                // $(go.Panel, 'Auto', // the link label, normally not visible
-                //     {visible: true, name: 'LABEL', segmentIndex: 2, segmentFraction: 0.5},
-                //     new go.Binding('visible', 'visible').makeTwoWay(),
-                //     $(go.Shape, // the label shape
-                //         {fill: $(go.Brush, 'Radial', { 0: 'rgb(240, 240, 240)', 0.3: 'rgb(240, 240, 240)', 1: 'rgba(240, 240, 240, 0)' }), stroke: null}),
-                //     $(go.TextBlock, 'Yes', // the label
-                //         {
-                //             textAlign: 'center',
-                //             font: '10pt helvetica, arial, sans-serif',
-                //             stroke: '#333333',
-                //             editable: false
-                //         },
-                //         new go.Binding('text').makeTwoWay())
-                // )
+                },
+                new go.Binding('points').makeTwoWay(),
+                $(go.Shape, // the highlight shape, normally transparent
+                    {isPanelMain: true, strokeWidth: 8, stroke: 'transparent', name: 'HIGHLIGHT'}),
+                $(go.Shape, // the link path shape
+                    {isPanelMain: true, stroke: 'gray', strokeWidth: 2}),
+                $(go.Panel, 'Auto', // the link label, normally not visible
+                    {visible: true, name: 'LABEL', segmentIndex: 2, segmentFraction: 0.5},
+                    new go.Binding('visible', 'visible').makeTwoWay(),
+                   
+                )
             )
         let myPalette =
             $(go.Palette, this.$refs.myPaletteDiv, // must name or refer to the DIV HTML element
@@ -144,62 +139,62 @@ export default {
                     // nodeTemplate: myDiagram.nodeTemplate, // share the templates used by myDiagram
                     model: new go.GraphLinksModel([ // specify the contents of the Palette
                         {
-                            key: 1,
+                            //key: 1,
                             text: 'Alpha',
-                            items: [
-                                { type: 'TriangleDown', h: 20, color: '#A0A0A0' },
+                            verticalItems: [
+                                { type: 'TriangleDown', h: 20, color: '#A0A0A0'},
                                 { type: 'MinusLine', h: 0 },
                                 { type: 'TriangleUp', h: 20, color: '#A0A0A0' }
                             ]
                         },
                         {
-                            key: 2,
+                            //key: 2,
                             text: 'Beta',
-                            items: [
+                            verticalItems: [
                                 { type: 'TriangleDown', h: 20, color: '#A0A0A0' },
                                 { type: 'TriangleUp', h: 20, color: '#A0A0A0' }
                             ]
                         },
                         {
-                            key: 3,
+                            //key: 3,
                             text: 'Gamma',
-                            items: [
+                            verticalItems: [
                                 { type: 'TriangleDown', h: 20, color: null },
                                 { type: 'MinusLine', h: 0 },
                                 { type: 'TriangleUp', h: 20, color: null }
                             ]
                         },
                         {
-                            key: 4,
+                            //key: 4,
                             text: 'Jay',
-                            items: [
+                            verticalItems: [
                                 { type: 'circle', h: 20, color: null }
 
                             ]
                         },
                         {
-                            key: 5,
+                            //key: 5,
                             text: 'John',
-                            items: [
-                                { type: 'TriangleRight', h: 20, color: null },
+                            horizontalItems: [
+                                { type: 'TriangleRight', h: 20, color: null},
                                 { type: 'LineV', w: 0 },
                                 { type: 'TriangleLeft', h: 20, color: null }
                             ]
                         },
                         {
-                            key: 6,
+                            //key: 6,
                             text: 'Jack',
-                            items: [
+                            horizontalItems: [
                                 { type: 'TriangleRight', h: 20, color: null },
                                 { type: 'TriangleLeft', h: 20, color: null }
                             ]
                         },
                         {
-                            key: 7,
+                            //key: 7,
                             text: 'Jordan',
-                            items: [
-                                { type: 'LogicAnd', color: null },
-                                { type: 'LogicForAll', color: null }
+                            horizontalItems: [
+                                 { type: 'TriangleRight', h: 20, color: '#A0A0A0',spot: go.Spot.Left },
+                                { type: 'TriangleLeft', h: 20, color: '#A0A0A0',spot: go.Spot.Right }
                             ]
                         }
                     ])
