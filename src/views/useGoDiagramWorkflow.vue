@@ -1,5 +1,5 @@
 <template>
-<div style="width: 80%;text-align: left;margin:auto">
+<div style="width: 90%;text-align: left;margin:auto">
     <diagram ref='diag' :model-data='diagramData' @model-changed='modelChanged' @changed-selection='changedSelection' @text-edited="textEdited" @modified="modified" style='width:100%; height:420px'></diagram>
     <!-- <triangle ref='diag' :model-data='diagramData' @model-changed='modelChanged' @changed-selection='changedSelection' @text-edited="textEdited" @modified="modified" style='width:100%; height:420px'></triangle> -->
     

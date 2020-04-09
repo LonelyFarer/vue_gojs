@@ -1,13 +1,27 @@
 <template>
     <div style='width:90%; white-space:nowrap;margin:auto'>
-        <span style='border: 1px solid gray;display: inline-block; vertical-align: top; width:240px;'>
-            <div ref='myPaletteDiv' style='height: 600px;'></div>
+        <span style='border: 1px solid gray;display: inline-block; vertical-align: top; width:220px;'>
+            <div id='myPaletteDiv' style='height: 600px;'></div>
         </span>
-        <span style='border: 1px solid gray;display: inline-block; vertical-align: top;width:calc(100% - 240px)'>
-            <div ref='myDiagramDiv' style='height: 600px'></div>
+        <span style='border: 1px solid gray;display: inline-block; vertical-align: top;width:calc(100% - 220px)'>
+            <div id='myDiagramDiv' style='height: 600px'></div>
         </span>
 
-        
+        <div>
+            <button id="saveModel" @click="save()">Save</button>
+            <button @click="load()">Load</button>
+            Diagram Model saved in JSON format:
+        </div>
+        <textarea id="mySavedModel"  style="width:100%;height:200px" >{ "class": "go.GraphLinksModel",
+  "linkFromPortIdProperty": "fromPort",
+  "linkToPortIdProperty": "toPort",
+  "nodeDataArray": [
+
+ ],
+  "linkDataArray": [
+
+ ]}
+        </textarea>
     </div>
 </template>
 
@@ -17,200 +31,479 @@ let $ = go.GraphObject.make
 
 export default {
     name: '',
-    props: ['modelData'],
     data () {
         return {
-            diagram: null
+            
+            diagram: null,
+            modelData:{ 
+                "class": "go.GraphLinksModel",
+                "linkFromPortIdProperty": "fromPort",
+                "linkToPortIdProperty": "toPort",
+                "nodeDataArray": [
+                    // {"category":"input", "key":"input1", "loc":"-150 -80" },
+                    // {"category":"output", "key":"output1", "loc":"200 -100" }
+                ],
+                "linkDataArray": [
+                    //{"from":"input1", "fromPort":"T", "to":"output1", "toPort":"in"},
+                ]
+            }
         }
     },
     mounted () {
-        let self = this
+        var white = "white";  // 0 or false
+        var gray = "#A0A0A0";  // 1 or true
+        var etext="edittext";
+        let _this = this
         let myDiagram =
-            $(go.Diagram, this.$refs.myDiagramDiv,
+            $(go.Diagram, "myDiagramDiv",
                 {
-                    initialContentAlignment: go.Spot.Center,
-                    // layout: $(go.TreeLayout, {angle: 90, arrangement: go.TreeLayout.ArrangementHorizontal}),
-                    'undoManager.isEnabled': true,
-                    // Model ChangedEvents get passed up to component users
-                    'ModelChanged': function (e) {
-                        self.$emit('model-changed', e)
-                    },
-                    'ChangedSelection': function (e) {
-                        self.$emit('changed-selection', e)
-                    },
-                    'Modified': function (e) {
-                        self.$emit('modified', e)
-                    },
-                    'TextEdited': function (e) {
-                        self.$emit('text-edited', e)
-                    },
-                    allowDrop: true
-                })
-        myDiagram.nodeTemplateMap.add('',
-            $(window.go.Node, 'Vertical', this.nodeStyle(),
-               
-                new go.Binding('itemArray', 'verticalItems'),
-                {
-                    itemTemplate:
-                    $(go.Panel, 'Auto',
-                        $(go.Shape,
-                            {
-                                figure: 'TriangleDown',
-                                fill: '#91E3E0',
-                                width: 20,
-                                height: 20
-                            },
-                            new go.Binding('fill', 'color'),
-                            new go.Binding('figure', 'type'),
-                            new go.Binding('height', 'h'),
-                            new go.Binding('width', 'w'),
-
-                           
-                        ),
-                        $(go.TextBlock,
-                        // { font: "20px sans-serif" },
-                         { font: "16px sans-serif" },
-                        new go.Binding("text", "text")),
-                        this.makePort('L', go.Spot.Left, true, true),
-                        this.makePort('R', go.Spot.Right, true, true)
-                    )
+                    "toolManager.mouseWheelBehavior": go.ToolManager.WheelZoom,
+                    "draggingTool.isGridSnapEnabled": true,  // dragged nodes will snap to a grid of 10x10 cells
+                    "undoManager.isEnabled": true,
                     
-                },
-            )
-        )
-
-        myDiagram.linkTemplate =
-            $(go.Link,
-              
-                // the whole link panel
-                {
-                    routing: go.Link.AvoidsNodes,
-                    curve: go.Link.JumpOver,
-                    corner: 5,
-                    toShortLength: 4,
-                    relinkableFrom: true,
-                    relinkableTo: true,
-                    reshapable: true,
-                    resegmentable: true,
-                   
-                    mouseEnter: function (e, link) {
-                        link.findObject('HIGHLIGHT').stroke = 'rgba(30,144,255,0.2)'
+                })
+       
+             // define templates for each type of node
+      var oilGroove =
+        $(go.Node, "Spot", this.nodeStyle(),
+         $(go.Panel, 'Auto',
+                $(go.Shape,this.shapeStyle(),
+                    {
+                        figure: 'Circle',
+                        fill: white,
+                        width: 70,
+                        height: 70
                     },
-                    mouseLeave: function (e, link) {
-                        link.findObject('HIGHLIGHT').stroke = 'transparent'
-                    }
-                },
-                new go.Binding('points').makeTwoWay(),
-                $(go.Shape, // the highlight shape, normally transparent
-                    {isPanelMain: true, strokeWidth: 8, stroke: 'transparent', name: 'HIGHLIGHT'}),
-                $(go.Shape, // the link path shape
-                    {isPanelMain: true, stroke: 'gray', strokeWidth: 2}),
-                $(go.Panel, 'Auto', // the link label, normally not visible
-                    {visible: true, name: 'LABEL', segmentIndex: 2, segmentFraction: 0.5},
-                    new go.Binding('visible', 'visible').makeTwoWay(),
-                   
-                )
-            )
+                ),
+                $(go.TextBlock,
+                { font: "16px sans-serif",
+                text:'压油槽' },
+                ),
+            ),
+        
+             $(go.Shape, "Rectangle", this.portStyle(go.Spot.Right,true,true),  
+            { portId: "R", alignment: new go.Spot(1, 0.5) }),
+            $(go.Shape, "Rectangle", this.portStyle(go.Spot.Left,true,true),
+            { portId: "L", alignment: new go.Spot(0, 0.5) }),
+            $(go.Shape, "Rectangle", this.portStyle(go.Spot.Top,true,true),
+            { portId: "T", alignment: new go.Spot(0.5, 0) }),
+            $(go.Shape, "Rectangle", this.portStyle(go.Spot.Bottom,true,true),
+            { portId: "B", alignment: new go.Spot(0.5, 1) }),
+         
+          { // if double-clicked, an input node will change its value, represented by the color.
+            doubleClick: function(e, obj) {
+              e.diagram.startTransaction("Toggle Input");
+              var shp = obj.findObject("NODESHAPE");
+              shp.fill = (shp.fill === gray) ? white : gray;
+              _this.updateStates();
+              e.diagram.commitTransaction("Toggle Input");
+            }
+          }
+        );
 
+      var pressureGroove =
+        $(go.Node, "Spot", this.nodeStyle(),
+         $(go.Panel, 'Auto',
+                $(go.Shape,this.shapeStyle(),
+                    {
+                        figure: 'Circle',
+                        fill: white,
+                        width: 70,
+                        height: 70
+                    },
+                ),
+                $(go.TextBlock,
+                { font: "16px sans-serif",
+                text:'压气槽' },
+                ),
+            ),
+        
+          $(go.Shape, "Rectangle", this.portStyle(go.Spot.Right,true,true),  
+            { portId: "R", alignment: new go.Spot(1, 0.5) }),
+            $(go.Shape, "Rectangle", this.portStyle(go.Spot.Left,true,true),
+            { portId: "L", alignment: new go.Spot(0, 0.5) }),
+            $(go.Shape, "Rectangle", this.portStyle(go.Spot.Top,true,true),
+            { portId: "T", alignment: new go.Spot(0.5, 0) }),
+            $(go.Shape, "Rectangle", this.portStyle(go.Spot.Bottom,true,true),
+            { portId: "B", alignment: new go.Spot(0.5, 1) }),
+          { // if double-clicked, an input node will change its value, represented by the color.
+            doubleClick: function(e, obj) {
+              e.diagram.startTransaction("Toggle Input");
+              var shp = obj.findObject("NODESHAPE");
+              shp.fill = (shp.fill === gray) ? white : gray;
+              _this.updateStates();
+              e.diagram.commitTransaction("Toggle Input");
+            }
+          }
+        );
+     var triangleTemplate =
+        $(go.Node, "Spot", this.nodeStyle(),
+         $(go.Panel, 'Vertical',
+                $(go.Shape,this.shapeStyle(),
+                    {
+                        figure: 'TriangleDown',
+                        fill: gray,
+                        width: 20,
+                        height: 20
+                    }),
+                   $(go.Shape,
+                    {
+                        figure: 'MinusLine',
+                        fill: gray,
+                        width: 20,
+                        height: 0
+                    }),
+                $(go.Shape,this.shapeStyle2(),
+                    {
+                        figure: 'TriangleUp',
+                        fill: gray,
+                        width: 20,
+                        height: 20
+                    }),
+            ),
+            $(go.Shape, "Rectangle", this.portStyle(go.Spot.Top,true,true),
+            { portId: "T", alignment: new go.Spot(0.5, 0) }),
+            $(go.Shape, "Rectangle", this.portStyle(go.Spot.Bottom,true,true),
+            { portId: "B", alignment: new go.Spot(0.5, 1) }),
+           
+          { // if double-clicked, an input node will change its value, represented by the color.
+            doubleClick: function(e, obj) {
+              e.diagram.startTransaction("Toggle Input");
+              var shp = obj.findObject("NODESHAPE");
+              var shp2 = obj.findObject("NODESHAPE2");
+              shp2.fill = (shp2.fill === gray) ? white : gray;
+              shp.fill = (shp.fill === gray) ? white : gray;
+              _this.updateStates();
+              e.diagram.commitTransaction("Toggle Input");
+            }
+          }
+        );
+       var triangle1Template =
+        $(go.Node, "Spot", this.nodeStyle(),
+         $(go.Panel, 'Vertical',
+                $(go.Shape,this.shapeStyle(),
+                    {
+                        figure: 'TriangleDown',
+                        fill: gray,
+                        width: 20,
+                        height: 20
+                    }),
+                $(go.Shape,this.shapeStyle2(),
+                    {
+                        figure: 'TriangleUp',
+                        fill: gray,
+                        width: 20,
+                        height: 20
+                    }),
+            ),
+              $(go.Shape, "Rectangle", this.portStyle(go.Spot.Top,true,true),
+            { portId: "T", alignment: new go.Spot(0.5, 0) }),
+            $(go.Shape, "Rectangle", this.portStyle(go.Spot.Bottom,true,true),
+            { portId: "B", alignment: new go.Spot(0.5, 1) }),
+          { // if double-clicked, an input node will change its value, represented by the color.
+            doubleClick: function(e, obj) {
+              e.diagram.startTransaction("Toggle Input");
+              var shp = obj.findObject("NODESHAPE");
+              shp.fill = (shp.fill === gray) ? white : gray;
+               var shp2 = obj.findObject("NODESHAPE2");
+              shp2.fill = (shp2.fill === gray) ? white : gray;
+              _this.updateStates();
+              e.diagram.commitTransaction("Toggle Input");
+            }
+          }
+        );
+        var triangle2Template =
+        $(go.Node, "Spot", this.nodeStyle(),
+         $(go.Panel, 'Vertical',
+                $(go.Shape,this.shapeStyle(),
+                    {
+                        figure: 'TriangleDown',
+                        fill: 'white',
+                        width: 20,
+                        height: 20
+                    }),
+                   $(go.Shape,
+                    {
+                        figure: 'MinusLine',
+                        width: 20,
+                        height: 0
+                    }),
+                $(go.Shape,this.shapeStyle2(),
+                    {
+                        figure: 'TriangleUp',
+                        fill: 'white',
+                        width: 20,
+                        height: 20
+                    }),
+            ),
+              $(go.Shape, "Rectangle", this.portStyle(go.Spot.Top,true,true),
+            { portId: "T", alignment: new go.Spot(0.5, 0) }),
+            $(go.Shape, "Rectangle", this.portStyle(go.Spot.Bottom,true,true),
+            { portId: "B", alignment: new go.Spot(0.5, 1) }),
+          { // if double-clicked, an input node will change its value, represented by the color.
+            doubleClick: function(e, obj) {
+              e.diagram.startTransaction("Toggle Input");
+              var shp = obj.findObject("NODESHAPE");
+              shp.fill = (shp.fill === gray) ? white : gray;
+               var shp2 = obj.findObject("NODESHAPE2");
+              shp2.fill = (shp2.fill === gray) ? white : gray;
+              _this.updateStates();
+              e.diagram.commitTransaction("Toggle Input");
+            }
+          }
+        );
+        var htriangleTemplate =
+        $(go.Node, "Spot", this.nodeStyle(),
+         $(go.Panel, 'Horizontal',
+                $(go.Shape,this.shapeStyle(),
+                    {
+                        figure: 'TriangleRight',
+                        fill: 'white',
+                        width: 20,
+                        height: 20
+                    }),
+                   $(go.Shape,
+                    {
+                        figure: 'LineV',
+                        width: 0,
+                        height: 20
+                    }),
+                $(go.Shape,this.shapeStyle2(),
+                    {
+                        figure: 'TriangleLeft',
+                        fill: 'white',
+                        width: 20,
+                        height: 20
+                    }),
+            ),
+            $(go.Shape, "Rectangle", this.portStyle(go.Spot.Right,true,true),  
+            { portId: "R", alignment: new go.Spot(1, 0.5) }),
+            $(go.Shape, "Rectangle", this.portStyle(go.Spot.Left,true,true),
+            { portId: "L", alignment: new go.Spot(0, 0.5) }),
+          { // if double-clicked, an input node will change its value, represented by the color.
+            doubleClick: function(e, obj) {
+              e.diagram.startTransaction("Toggle Input");
+              var shp = obj.findObject("NODESHAPE");
+              shp.fill = (shp.fill === gray) ? white : gray;
+               var shp2 = obj.findObject("NODESHAPE2");
+              shp2.fill = (shp2.fill === gray) ? white : gray;
+              _this.updateStates();
+              e.diagram.commitTransaction("Toggle Input");
+            }
+          }
+        );
+        var htriangle1Template =
+        $(go.Node, "Spot", this.nodeStyle(),
+         $(go.Panel, 'Horizontal',
+                $(go.Shape,this.shapeStyle(),
+                    {
+                        figure: 'TriangleRight',
+                        fill: 'white',
+                        width: 20,
+                        height: 20
+                    }),
+                $(go.Shape,this.shapeStyle2(),
+                    {
+                        figure: 'TriangleLeft',
+                        fill: 'white',
+                        width: 20,
+                        height: 20
+                    }),
+            ),
+            $(go.Shape, "Rectangle", this.portStyle(go.Spot.Right,true,true),  
+            { portId: "R", alignment: new go.Spot(1, 0.5) }),
+            $(go.Shape, "Rectangle", this.portStyle(go.Spot.Left,true,true),
+            { portId: "L", alignment: new go.Spot(0, 0.5) }),
+          { // if double-clicked, an input node will change its value, represented by the color.
+            doubleClick: function(e, obj) {
+              e.diagram.startTransaction("Toggle Input");
+              var shp = obj.findObject("NODESHAPE");
+              shp.fill = (shp.fill === gray) ? white : gray;
+               var shp2 = obj.findObject("NODESHAPE2");
+              shp2.fill = (shp2.fill === gray) ? white : gray;
+              _this.updateStates();
+              e.diagram.commitTransaction("Toggle Input");
+            }
+          }
+        );
+        var htriangle2Template =
+        $(go.Node, "Spot", this.nodeStyle(),
+         $(go.Panel, 'Horizontal',
+                 $(go.Shape,this.shapeStyle(),
+                    {
+                        figure: 'TriangleRight',
+                        fill: gray,
+                        width: 20,
+                        height: 20
+                    }),
+                   $(go.Shape,
+                    {
+                        figure: 'LineV',
+                        width: 0,
+                        height: 20
+                    }),
+                $(go.Shape,this.shapeStyle2(),
+                    {
+                        figure: 'TriangleLeft',
+                        fill: gray,
+                        width: 20,
+                        height: 20
+                    }),
+            ),
+           $(go.Shape, "Rectangle", this.portStyle(go.Spot.Right,true,true),  
+            { portId: "R", alignment: new go.Spot(1, 0.5) }),
+            $(go.Shape, "Rectangle", this.portStyle(go.Spot.Left,true,true),
+            { portId: "L", alignment: new go.Spot(0, 0.5) }),
+          { // if double-clicked, an input node will change its value, represented by the color.
+            doubleClick: function(e, obj) {
+              e.diagram.startTransaction("Toggle Input");
+              var shp = obj.findObject("NODESHAPE");
+              shp.fill = (shp.fill === gray) ? white : gray;
+               var shp2 = obj.findObject("NODESHAPE2");
+              shp2.fill = (shp2.fill === gray) ? white : gray;
+              _this.updateStates();
+              e.diagram.commitTransaction("Toggle Input");
+            }
+          }
+        );
+        var rectangle= $(go.Node, "Spot", this.nodeStyle(),
+         $(go.Panel, 'Vertical',
+                 $(go.Shape,
+                    {
+                        figure: 'Rectangle',
+                        fill: gray,
+                        width: 60,
+                        height: 10
+                    }),
+                   $(go.Shape,
+                    {
+                        figure: 'Rectangle',
+                        fill: '#000000',
+                        width: 30,
+                        height: 10
+                    }),
+                $(go.Shape,
+                    {
+                        figure: 'Rectangle',
+                        fill: gray,
+                        width: 60,
+                        height: 30
+                    }),
+            ),
+            $(go.Shape, "Rectangle", this.portStyle(go.Spot.Right,true,true),  
+            { portId: "R", alignment: new go.Spot(1, 0.5) }),
+            $(go.Shape, "Rectangle", this.portStyle(go.Spot.Left,true,true),
+            { portId: "L", alignment: new go.Spot(0, 0.5) }),
+          { // if double-clicked, an input node will change its value, represented by the color.
+            doubleClick: function(e, obj) {
+              e.diagram.startTransaction("Toggle Input");
+              var shp = obj.findObject("NODESHAPE");
+              shp.fill = (shp.fill === gray) ? white : gray;
+               var shp2 = obj.findObject("NODESHAPE2");
+              shp2.fill = (shp2.fill === gray) ? white : gray;
+              _this.updateStates();
+              e.diagram.commitTransaction("Toggle Input");
+            }
+          }
+        );
+        var edittext= $(go.Node,this.nodeStyle(),
+        $(go.TextBlock,
+        { text: etext,
+          background: white,
+          editable: true, isMultiline: false })
+        );
+    var edittext1= $(go.Part,
+        $(go.TextBlock,
+        { text: etext,
+          background: white,
+          editable: true, isMultiline: false })
+        );
+      // add the templates created above to myDiagram and palette
+        myDiagram.nodeTemplateMap.add("oilGroove", oilGroove);
+        myDiagram.nodeTemplateMap.add("pressureGroove", pressureGroove);
+        myDiagram.nodeTemplateMap.add("triangle", triangleTemplate);
+        myDiagram.nodeTemplateMap.add("triangle1", triangle1Template);
+        myDiagram.nodeTemplateMap.add("triangle2", triangle2Template);
+        myDiagram.nodeTemplateMap.add("htriangle", htriangleTemplate);
+        myDiagram.nodeTemplateMap.add("htriangle1", htriangle1Template);
+        myDiagram.nodeTemplateMap.add("htriangle2", htriangle2Template);
+        myDiagram.nodeTemplateMap.add("rectangle", rectangle);
+        myDiagram.nodeTemplateMap.add("edittext", edittext);
+
+      myDiagram.linkTemplate =
+        $(go.Link,
+          {
+            routing: go.Link.AvoidsNodes,
+            curve: go.Link.JumpOver,
+            corner: 0,
+            relinkableFrom: true, 
+            relinkableTo: true,
+            selectionAdorned: false, // Links are not adorned when selected so that their color remains visible.
+            reshapable: true,
+            //resegmentable: true,
+            shadowOffset: new go.Point(0, 0), shadowBlur: 5, shadowColor: "blue",
+          },
+          //new go.Binding("isShadowed", "isSelected").ofObject(),
+           $(go.Shape,
+             { name: "SHAPE", strokeWidth: 2, stroke: '#000' })
+        
+        );
+   
         let myPalette =
-            $(go.Palette, this.$refs.myPaletteDiv, // must name or refer to the DIV HTML element
+            $(go.Palette, 'myPaletteDiv', // must name or refer to the DIV HTML element
                 {
                     'animationManager.duration': 800, // slightly longer than default (600ms) animation
                     nodeTemplateMap: myDiagram.nodeTemplateMap, // share the templates used by myDiagram
-                    // nodeTemplate: myDiagram.nodeTemplate, // share the templates used by myDiagram
                     model: new go.GraphLinksModel([ // specify the contents of the Palette
-                        {
-                            //key: 1,
-                            text: 'Alpha',
-                            verticalItems: [
-                                { type: 'TriangleDown', h: 20, color: '#A0A0A0' },
-                                { type: 'MinusLine', h: 0 },
-                                { type: 'TriangleUp', h: 20, color: '#A0A0A0' }
-                            ]
-                        },
-                        {
-                            //key: 2,
-                            text: 'Beta',
-                            verticalItems: [
-                                { type: 'TriangleDown', h: 20, color: '#A0A0A0' },
-                                { type: 'TriangleUp', h: 20, color: '#A0A0A0' }
-                            ]
-                        },
-                        {
-                            //key: 3,
-                            text: 'Gamma',
-                            verticalItems: [
-                                { type: 'TriangleDown', h: 20, color: null },
-                                { type: 'MinusLine', h: 0 },
-                                { type: 'TriangleUp', h: 20, color: null }
-                            ]
-                        },
-                        {
-                            //key: 4,
-                            text: 'Jay',
-                            verticalItems: [
-                                { type: 'circle', h: 70,w: 70, color: null,text:'压油槽' },
-                                
-                            ]
-                        },
-                        {
-                            //key: 5,
-                            verticalItems: [
-                                { type: 'circle', h: 70,w: 70, color: null,text:'压气槽' },
-                                
-                            ]
-                        },
-                        {
-                            verticalItems: [
-                                { type: 'Rectangle', h: 10,w:60, color: '#A0A0A0' },
-                                { type: 'Rectangle', h: 10,w:30, color: '#000000' },
-                                { type: 'Rectangle', h: 30,w:60, color: '#A0A0A0' }
-                            ]
-                        },
+                        { category: "oilGroove" },
+                        { category: "pressureGroove" },
+                        { category: "triangle" },
+                        { category: "triangle1" },
+                        { category: "triangle2" },
+                        { category: "htriangle" },
+                        { category: "htriangle1" },
+                        { category: "htriangle2" },
+                        { category: "rectangle" },
+                        { category: "edittext"}
+                        
                     ])
                 })
-        console.log(myPalette)
-        this.diagram = myDiagram
-        this.updateModel(this.modelData)
+       this.diagram = myDiagram
+        // load the initial diagram
+        this.load();
+
+        // continually update the diagram
+        this.loop();
+        
     },
     watch: {
-        modelData: function (val) {
-            console.log('watch')
-            console.log(val)
-            this.updateModel(val)
-        }
+       
     },
     computed: {},
     methods: {
-        makePort (name, spot, output, input) {
-            return $(go.Shape, 'Circle',
-                {
-                    fill: 'transparent',
-                    stroke: null, // this is changed to 'white' in the showPorts function
-                    desiredSize: new go.Size(8, 8),
-                    alignment: spot,
-                    alignmentFocus: spot, // align the port on the main Shape
-                    portId: name, // declare this object to be a 'port'
-                    fromSpot: spot,
-                    toSpot: spot, // declare where links may connect at this port
-                    fromLinkable: output,
-                    toLinkable: input, // declare whether the user may draw links to/from here
-                    cursor: 'pointer' // show a different cursor to indicate potential link point
-                })
-        },
-        nodeStyle () {
-            return [
-                new go.Binding('location', 'loc', go.Point.parse).makeTwoWay(go.Point.stringify),
-                {
-                    locationSpot: go.Spot.Center,
-                    mouseEnter: (e, obj) => {
-                        this.showPorts(obj.part, true)
-                    },
-                    mouseLeave: (e, obj) => {
-                        this.showPorts(obj.part, false)
-                    }
+        nodeStyle() {
+             var sharedToolTip =
+                $("ToolTip",
+                { "Border.figure": "RoundedRectangle" },
+                $(go.TextBlock, { margin: 2 },
+                new go.Binding("text", "", function(d) { return d.category; })
+            ));
+            return [new go.Binding("location", "loc", go.Point.parse).makeTwoWay(go.Point.stringify),
+            new go.Binding("isShadowed", "isSelected").ofObject(),
+            {
+                locationSpot: go.Spot.Center,
+                selectionAdorned: false,
+                shadowOffset: new go.Point(0, 0),
+                shadowBlur: 15,
+                shadowColor: "blue",
+                toolTip: sharedToolTip,
+                mouseEnter: (e, obj) => {
+                    this.showPorts(obj.part, true)
+                },
+                mouseLeave: (e, obj) => {
+                    this.showPorts(obj.part, false)
                 }
-            ]
+            }];
         },
         showPorts (node, show) {
             let diagram = node.diagram
@@ -219,31 +512,101 @@ export default {
                 port.stroke = (show ? 'white' : null)
             })
         },
-        model: function () {
-            return this.diagram.model
+        shapeStyle() {
+            return {
+                name: "NODESHAPE",
+                fill: "lightgray",
+                stroke: "#000000",
+                desiredSize: new go.Size(40, 40),
+                strokeWidth: 1
+            };
         },
-        updateModel: function (val) {
-            // No GoJS transaction permitted when replacing Diagram.model.
-            if (val instanceof go.Model) {
-                this.diagram.model = val
-            } else {
-                let m = new go.GraphLinksModel()
-                if (val) {
-                    for (let p in val) {
-                        m[p] = val[p]
-                    }
-                }
-                this.diagram.model = m
-            }
+        shapeStyle2() {
+            return {
+                name: "NODESHAPE2",
+                fill: "lightgray",
+                stroke: "#000000",
+                desiredSize: new go.Size(40, 40),
+                strokeWidth: 1
+            };
         },
-        updateDiagramFromData: function () {
-            this.diagram.startTransaction()
-            // This is very general but very inefficient.
-            // It would be better to modify the diagramData data by calling
-            // Model.setDataProperty or Model.addNodeData, et al.
-            this.diagram.updateAllRelationshipsFromData()
-            this.diagram.updateAllTargetBindings()
-            this.diagram.commitTransaction('updated')
+        portStyle(spot,input,output) {
+            return {
+                desiredSize: new go.Size(5, 5),
+                fill: 'transparent',
+                stroke:null,
+                fromSpot: spot,
+                fromLinkable: output,
+                toSpot: spot,
+                toLinkable: input,
+                toMaxLinks: 1,
+                cursor: "pointer",
+                
+            };
+        },
+        save() {
+            
+            var img = this.diagram.makeImage({
+                scale: 1
+            });
+            // 将图片的src属性作为URL地址
+            var url = img.src;
+            var a = document.createElement('a');
+            var event = new MouseEvent('click');
+            a.download = '流程图';
+            a.href = url;
+            a.dispatchEvent(event);
+
+            document.getElementById("mySavedModel").value = this.diagram.model.toJson();
+            //myDiagram.isModified = false;
+        },
+        load() {
+            this.diagram.model = go.Model.fromJson(document.getElementById("mySavedModel").value);
+            this.diagram.isModified = false;
+        },
+        loop() {
+            var _this=this
+            setTimeout(function() { _this.updateStates(); _this.loop(); }, 250);
+        },
+        updateStates() {
+            var _this=this
+            var oldskip = this.diagram.skipsUndoManager;
+            this.diagram.skipsUndoManager = true;
+            // //连接线随着点击改变
+            // this.diagram.nodes.each(function(node) {
+            //     if (node.category === "input") {
+            //         _this.doInput(node);
+            //     }
+            // });
+
+            // //相连的随着点击改变
+            // this.diagram.nodes.each(function(node) {
+            //     switch (node.category) {
+            //     case "output": _this.doOutput(node); break;
+            //     case "input": break;  // doInput already called, above
+            //     }
+            // });
+            this.diagram.skipsUndoManager = oldskip;
+        },
+        // doInput(node) {
+        //     var _this=this
+        //     // the output is just the node's Shape.fill
+        //     _this.setOutputLinks(node, node.findObject("NODESHAPE").fill);
+        // },
+        // doOutput(node) {
+        //     // assume there is just one input link
+        //     // we just need to update the node's Shape.fill
+        //     node.linksConnected.each(function(link) { node.findObject("NODESHAPE").fill = link.findObject("SHAPE").stroke; });
+        // },
+       
+        // helper predicate
+        linkIsTrue(link) {  // assume the given Link has a Shape named "SHAPE"
+            return link.findObject("SHAPE").stroke === gray;
+        },
+
+        // helper function for propagating results
+        setOutputLinks(node, color) {
+            node.findLinksOutOf().each(function(link) { link.findObject("SHAPE").stroke = color; });
         }
     }
 }

@@ -1,10 +1,10 @@
 <template>
     <div style='width:100%; white-space:nowrap;'>
-        <span style='border: 1px solid gray;display: inline-block; vertical-align: top; width:120px;'>
-            <div ref='myPaletteDiv' style='height: 410px;'>1111</div>
+        <span style='border: 1px solid gray;display: inline-block; vertical-align: top; width:240px;'>
+            <div ref='myPaletteDiv' style='height: 600px;'>1111</div>
         </span>
-        <span style='border: 1px solid gray;display: inline-block; vertical-align: top;width:calc(100% - 120px)'>
-            <div ref='myDiagramDiv' style='height: 410px'></div>
+        <span style='border: 1px solid gray;display: inline-block; vertical-align: top;width:calc(100% - 240px)'>
+            <div ref='myDiagramDiv' style='height: 600px'></div>
         </span>
     </div>
 </template>
@@ -27,6 +27,8 @@ export default {
             $(go.Diagram, this.$refs.myDiagramDiv,
                 {
                     initialContentAlignment: go.Spot.Center,
+                    
+                    "toolManager.mouseWheelBehavior": go.ToolManager.WheelZoom,
                     // layout: $(go.TreeLayout, {angle: 90, arrangement: go.TreeLayout.ArrangementHorizontal}),
                     'undoManager.isEnabled': true,
                     // Model ChangedEvents get passed up to component users
@@ -44,9 +46,9 @@ export default {
                     },
                     allowDrop: true
                 })
-        myDiagram.nodeTemplateMap.add('',
+        myDiagram.nodeTemplateMap.add('Vertical',
             $(window.go.Node, 'Vertical', this.nodeStyle(),
-               
+                
                 new go.Binding('itemArray', 'verticalItems'),
                 {
                     itemTemplate:
@@ -64,14 +66,17 @@ export default {
                             new go.Binding('width', 'w')
 
                         ),
-                        this.makePort('L', go.Spot.Left, true, true),
-                        this.makePort('R', go.Spot.Right, true, true)
+                        $(go.TextBlock,
+                         { font: "16px sans-serif" },
+                        new go.Binding("text", "text")),
+                        this.makePort('T', go.Spot.Top, false, true),
+                        this.makePort('B', go.Spot.Bottom, true, false),
                     )
                 },
             )
         )
-
-        myDiagram.nodeTemplateMap.add('',
+                   
+        myDiagram.nodeTemplateMap.add('Horizontal',
             $(window.go.Node, 'Horizontal', this.nodeStyle(),
                 new go.Binding('itemArray', 'horizontalItems'),
                 {
@@ -85,21 +90,81 @@ export default {
                                 height: 20,
                                 toSpot: go.Spot.Left,
                             },
+                            
                             new go.Binding('fill', 'color'),
                             new go.Binding('figure', 'type'),
                             new go.Binding('height', 'h'),
                             new go.Binding('width', 'w'),
                             
                         ),
+                        $(go.TextBlock,
+                         { font: "16px sans-serif" },
+                        new go.Binding("text", "text")),
                         this.makePort('L', go.Spot.Left, true, true),
                         this.makePort('R', go.Spot.Right, true, true)
-                    ) 
+                    ),
                     
                 }
             )
         )
+        myDiagram.nodeTemplateMap.add('VHorizontal',
+            $(window.go.Node, 'Vertical', this.nodeStyle(),
+                new go.Binding('itemArray', 'verticalItems'),
+                {
+                    itemTemplate:
+                    $(go.Panel, 'Auto',
+                        $(go.Shape,
+                            {
+                                figure: 'TriangleDown',
+                                fill: '#91E3E0',
+                                width: 20,
+                                height: 20
+                            },
+                            new go.Binding('fill', 'color'),
+                            new go.Binding('figure', 'type'),
+                            new go.Binding('height', 'h'),
+                            new go.Binding('width', 'w')
 
-
+                        ),
+                        $(go.TextBlock,
+                         { font: "16px sans-serif" },
+                        new go.Binding("text", "text")),
+                        this.makePort('L', go.Spot.Left, true, true),
+                        this.makePort('R', go.Spot.Right, true, true),
+                    )
+                },
+            )
+        )
+        myDiagram.nodeTemplateMap.add('',
+            $(window.go.Node, 'Vertical', this.nodeStyle(),
+                new go.Binding('itemArray', 'verticalItems'),
+                {
+                    itemTemplate:
+                    $(go.Panel, 'Auto',
+                        $(go.Shape,
+                            {
+                                figure: 'TriangleDown',
+                                fill: '#91E3E0',
+                                width: 20,
+                                height: 20
+                            },
+                            new go.Binding('fill', 'color'),
+                            new go.Binding('figure', 'type'),
+                            new go.Binding('height', 'h'),
+                            new go.Binding('width', 'w')
+                        ),
+                        $(go.TextBlock,
+                         { font: "16px sans-serif" },
+                        new go.Binding("text", "text")),
+                        this.makePort('L', go.Spot.Left, true, true),
+                        this.makePort('R', go.Spot.Right, true, true),
+                        this.makePort('T', go.Spot.Top, true, true),
+                        this.makePort('B', go.Spot.Bottom, true, true),
+                    )
+                },
+            ) 
+        )
+        
         myDiagram.linkTemplate =
             $(go.Link,
                 // the whole link panel
@@ -139,69 +204,86 @@ export default {
                     // nodeTemplate: myDiagram.nodeTemplate, // share the templates used by myDiagram
                     model: new go.GraphLinksModel([ // specify the contents of the Palette
                         {
-                            //key: 1,
-                            text: 'Alpha',
+                            key: 1,
                             verticalItems: [
                                 { type: 'TriangleDown', h: 20, color: '#A0A0A0'},
                                 { type: 'MinusLine', h: 0 },
                                 { type: 'TriangleUp', h: 20, color: '#A0A0A0' }
-                            ]
+                            ],
+                            category:'Vertical'
                         },
                         {
-                            //key: 2,
-                            text: 'Beta',
+                            key: 2,
                             verticalItems: [
                                 { type: 'TriangleDown', h: 20, color: '#A0A0A0' },
                                 { type: 'TriangleUp', h: 20, color: '#A0A0A0' }
-                            ]
+                            ],
+                            category:'Vertical'
                         },
                         {
-                            //key: 3,
-                            text: 'Gamma',
+                            key: 3,
                             verticalItems: [
                                 { type: 'TriangleDown', h: 20, color: null },
                                 { type: 'MinusLine', h: 0 },
                                 { type: 'TriangleUp', h: 20, color: null }
-                            ]
+                            ],
+                            category:'Vertical'
                         },
-                        {
-                            //key: 4,
-                            text: 'Jay',
+                         {
+                            key: 4,
                             verticalItems: [
-                                { type: 'circle', h: 20, color: null }
-
-                            ]
+                                { type: 'circle', h: 70,w: 70, color: null,text:'压油槽' },
+                                
+                            ],
+                            category:''
                         },
                         {
-                            //key: 5,
-                            text: 'John',
+                            key: 5,
+                            verticalItems: [
+                                { type: 'circle', h: 70,w: 70, color: null,text:'压气槽' },
+                                
+                            ],
+                            category:''
+                        },
+                        {
+                            key: 6,
+                            verticalItems: [
+                                { type: 'Rectangle', h: 10,w:60, color: '#A0A0A0' },
+                                { type: 'Rectangle', h: 10,w:30, color: '#000000' },
+                                { type: 'Rectangle', h: 30,w:60, color: '#A0A0A0' }
+                            ],
+                            category:'VHorizontal'
+                        },
+                        {
+                            key: 7,
                             horizontalItems: [
                                 { type: 'TriangleRight', h: 20, color: null},
                                 { type: 'LineV', w: 0 },
                                 { type: 'TriangleLeft', h: 20, color: null }
-                            ]
+                            ],
+                            category:'Horizontal'
                         },
                         {
-                            //key: 6,
-                            text: 'Jack',
+                            key: 8,
                             horizontalItems: [
                                 { type: 'TriangleRight', h: 20, color: null },
                                 { type: 'TriangleLeft', h: 20, color: null }
-                            ]
+                            ],
+                            category:'Horizontal'
                         },
                         {
-                            //key: 7,
-                            text: 'Jordan',
+                            key: 9,
                             horizontalItems: [
                                  { type: 'TriangleRight', h: 20, color: '#A0A0A0',spot: go.Spot.Left },
                                 { type: 'TriangleLeft', h: 20, color: '#A0A0A0',spot: go.Spot.Right }
-                            ]
+                            ],
+                            category:'Horizontal'
                         }
                     ])
                 })
-        console.log(myPalette)
+        console.log(myPalette,'myPalette')
         this.diagram = myDiagram
-        this.updateModel(this.modelData)
+        this.updateModel(this.modelData) //取消注释线会穿过
     },
     watch: {
         modelData: function (val) {
@@ -212,6 +294,7 @@ export default {
     },
     computed: {},
     methods: {
+        
         makePort (name, spot, output, input) {
             return $(go.Shape, 'Circle',
                 {
