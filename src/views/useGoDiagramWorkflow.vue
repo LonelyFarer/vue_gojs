@@ -3,10 +3,10 @@
     <diagram ref='diag' :model-data='diagramData' @model-changed='modelChanged' @changed-selection='changedSelection' @text-edited="textEdited" @modified="modified" style='width:100%; height:420px'></diagram>
     <!-- <triangle ref='diag' :model-data='diagramData' @model-changed='modelChanged' @changed-selection='changedSelection' @text-edited="textEdited" @modified="modified" style='width:100%; height:420px'></triangle> -->
     
-    <!-- <button @click='addNode'>Add Child to Gamma</button>
+    <button @click='addNode'>Add Child to Gamma</button>
     <button @click='modifyStuff'>Modify view model data without undo</button>
     <br/>Current Node:
-    <input v-model.lazy='currentNodeText' :disabled='currentNode === null'/> -->
+    <input v-model.lazy='currentNodeText' :disabled='currentNode === null'/>
     <br/>The saved GoJS Model:
     
     <textarea style='width:100%;height:200px' v-model="savedModelText"></textarea>

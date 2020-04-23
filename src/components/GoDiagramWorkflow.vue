@@ -1,10 +1,10 @@
 <template>
     <div style='width:100%; white-space:nowrap;'>
         <span style='border: 1px solid gray;display: inline-block; vertical-align: top; width:240px;'>
-            <div ref='myPaletteDiv' style='height: 600px;'>1111</div>
+            <div ref='myPaletteDiv' style='height: 400px;'>1111</div>
         </span>
         <span style='border: 1px solid gray;display: inline-block; vertical-align: top;width:calc(100% - 240px)'>
-            <div ref='myDiagramDiv' style='height: 600px'></div>
+            <div ref='myDiagramDiv' style='height: 400px'></div>
         </span>
     </div>
 </template>

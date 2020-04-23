@@ -13,18 +13,19 @@
       <button id="saveModel" @click="save()">Save</button>
       <button @click="load()">Load</button>
       <button @click="clear()">Clear</button>
+      <button @click="bind()">绑定</button>
+      <button @click="bindComplete()">完成绑定</button>
+      <br>
       Diagram Model saved in JSON format:
     </div>
-    <textarea id="mySavedModel" style="width:100%;height:200px">{ "class": "go.GraphLinksModel",
-  "linkFromPortIdProperty": "fromPort",
-  "linkToPortIdProperty": "toPort",
-  "nodeDataArray": [
-
- ],
-  "linkDataArray": [
-
- ]}
-        </textarea>
+    <textarea id="mySavedModel" style="width:100%;height:200px;border:1px solid #000" v-model="modelData">
+    </textarea>
+        <div style="display:flex;min-height:200px;">
+          <div style="width:100px;height:100px;border:1px solid red;margin-right:50px;"></div>
+          <div style="width:800px;height:100px;border:1px solid blue">
+            <div v-for="(item,index) in checkList"  :key="index" style="color:blue;border:1px solid black;">{{item}}</div>
+          </div>
+        </div>
   </div>
 </template>
 
@@ -47,16 +48,16 @@ export default {
   data() {
     return {
       diagram: null,
-      modelData: {
-        class: "go.GraphLinksModel",
-        linkFromPortIdProperty: "fromPort",
-        linkToPortIdProperty: "toPort",
-        nodeDataArray: [
-          // {"category":"input", "key":"input1", "loc":"-150 -80" },
-          // {"category":"output", "key":"output1", "loc":"200 -100" }
+      modelData: 
+      {
+        "class": "go.GraphLinksModel",
+        "linkFromPortIdProperty": "fromPort",
+        "linkToPortIdProperty": "toPort",
+        "nodeDataArray": [
+          
         ],
-        linkDataArray: [
-          //{"from":"input1", "fromPort":"T", "to":"output1", "toPort":"in"},
+        "linkDataArray": [
+         
         ]
       },
       png2: png2,
@@ -67,7 +68,13 @@ export default {
       png8: png8,
       png9: png9,
       png1_2: png1_2,
-      circleText: "M"
+      circleText: "M",
+      checkList:[],
+      firstKey:'',
+      isBind:false,
+      white:"white",// 0 or false
+      gray: "#A0A0A0", // 1 or true
+      black: "#000000",
     };
   },
   mounted() {
@@ -125,8 +132,7 @@ export default {
           fill: white,
           width: 70,
           height: 70
-        }),
-        new go.Binding("fill", "fill").makeTwoWay(),
+        },new go.Binding("fill", "fill").makeTwoWay(),),
         $(go.TextBlock, { font: "16px sans-serif", text: "压油槽" })
       ),
 
@@ -150,13 +156,9 @@ export default {
       {
         // if double-clicked, an input node will change its value, represented by the color.
         doubleClick: function(e, obj) {
-          var node = myDiagram.model.findNodeDataForKey(data.key); //首先拿到这个节点的对象
-          if (data.fill == gray) {
-            myDiagram.model.setDataProperty(node, "fill", white); //然后对这个对象的属性进行更改
-          } else if (data.fill == white) {
-            myDiagram.model.setDataProperty(node, "fill", gray);
-          }
-          _this.updateStates();
+          var data = obj.part.data;
+          _this.changeStyle(data.key,data.fill)
+          _this.updateStates(data.key);
         }
       }
     );
@@ -200,13 +202,9 @@ export default {
       {
         // if double-clicked, an input node will change its value, represented by the color.
         doubleClick: function(e, obj) {
-          var node = myDiagram.model.findNodeDataForKey(data.key); //首先拿到这个节点的对象
-          if (data.fill == gray) {
-            myDiagram.model.setDataProperty(node, "fill", white); //然后对这个对象的属性进行更改
-          } else if (data.fill == white) {
-            myDiagram.model.setDataProperty(node, "fill", gray);
-          }
-          _this.updateStates();
+          var data = obj.part.data;
+          _this.changeStyle(data.key,data.fill)
+          _this.updateStates(data.key);
         }
       }
     );
@@ -261,13 +259,8 @@ export default {
           var data = obj.part.data;
           data.category =
             data.category === "triangle" ? "triangle2" : "triangle";
-          var node = myDiagram.model.findNodeDataForKey(data.key); //首先拿到这个节点的对象
-          if (data.fill == gray) {
-            myDiagram.model.setDataProperty(node, "fill", white); //然后对这个对象的属性进行更改
-          } else if (data.fill == white) {
-            myDiagram.model.setDataProperty(node, "fill", gray);
-          }
-          _this.updateStates();
+          _this.changeStyle(data.key,data.fill)
+          _this.updateStates(data.key);
         }
       }
     );
@@ -315,13 +308,8 @@ export default {
           var data = obj.part.data;
           data.category =
             data.category === "triangle1" ? "triangle3" : "triangle1";
-          var node = myDiagram.model.findNodeDataForKey(data.key); //首先拿到这个节点的对象
-          if (data.fill == gray) {
-            myDiagram.model.setDataProperty(node, "fill", white); //然后对这个对象的属性进行更改
-          } else if (data.fill == white) {
-            myDiagram.model.setDataProperty(node, "fill", gray);
-          }
-          _this.updateStates();
+          _this.changeStyle(data.key,data.fill)
+          _this.updateStates(data.key);
         }
       }
     );
@@ -374,13 +362,8 @@ export default {
           var data = obj.part.data;
           data.category =
             data.category === "triangle2" ? "triangle" : "triangle2";
-          var node = myDiagram.model.findNodeDataForKey(data.key); //首先拿到这个节点的对象
-          if (data.fill == gray) {
-            myDiagram.model.setDataProperty(node, "fill", white); //然后对这个对象的属性进行更改
-          } else if (data.fill == white) {
-            myDiagram.model.setDataProperty(node, "fill", gray);
-          }
-          _this.updateStates();
+          _this.changeStyle(data.key,data.fill)
+          _this.updateStates(data.key);
         }
       }
     );
@@ -428,14 +411,9 @@ export default {
           var data = obj.part.data;
           data.category =
             data.category === "triangle3" ? "triangle1" : "triangle3";
-          var node = myDiagram.model.findNodeDataForKey(data.key); //首先拿到这个节点的对象
-          if (data.fill == gray) {
-            myDiagram.model.setDataProperty(node, "fill", white); //然后对这个对象的属性进行更改
-          } else if (data.fill == white) {
-            myDiagram.model.setDataProperty(node, "fill", gray);
-          }
+          _this.changeStyle(data.key,data.fill)
 
-          _this.updateStates();
+          _this.updateStates(data.key);
         }
       }
     );
@@ -489,14 +467,9 @@ export default {
           var data = obj.part.data;
           data.category =
             data.category === "htriangle" ? "htriangle2" : "htriangle";
-          var node = myDiagram.model.findNodeDataForKey(data.key); //首先拿到这个节点的对象
-          if (data.fill == gray) {
-            myDiagram.model.setDataProperty(node, "fill", white); //然后对这个对象的属性进行更改
-          } else if (data.fill == white) {
-            myDiagram.model.setDataProperty(node, "fill", gray);
-          }
+          _this.changeStyle(data.key,data.fill)
 
-          _this.updateStates();
+          _this.updateStates(data.key);
         }
       }
     );
@@ -544,13 +517,8 @@ export default {
           var data = obj.part.data;
           data.category =
             data.category === "htriangle1" ? "htriangle3" : "htriangle1";
-          var node = myDiagram.model.findNodeDataForKey(data.key); //首先拿到这个节点的对象
-          if (data.fill == gray) {
-            myDiagram.model.setDataProperty(node, "fill", white); //然后对这个对象的属性进行更改
-          } else if (data.fill == white) {
-            myDiagram.model.setDataProperty(node, "fill", gray);
-          }
-          _this.updateStates();
+          _this.changeStyle(data.key,data.fill)
+          _this.updateStates(data.key);
         }
       }
     );
@@ -605,13 +573,8 @@ export default {
           console.log(data, "data2");
           data.category =
             data.category === "htriangle2" ? "htriangle" : "htriangle2";
-          var node = myDiagram.model.findNodeDataForKey(data.key); //首先拿到这个节点的对象
-          if (data.fill == gray) {
-            myDiagram.model.setDataProperty(node, "fill", white); //然后对这个对象的属性进行更改
-          } else if (data.fill == white) {
-            myDiagram.model.setDataProperty(node, "fill", gray);
-          }
-          _this.updateStates();
+          _this.changeStyle(data.key,data.fill)
+          _this.updateStates(data.key);
         }
       }
     );
@@ -659,13 +622,9 @@ export default {
           var data = obj.part.data;
           data.category =
             data.category === "htriangle1" ? "htriangle3" : "htriangle1";
-          var node = myDiagram.model.findNodeDataForKey(data.key); //首先拿到这个节点的对象
-          if (data.fill == gray) {
-            myDiagram.model.setDataProperty(node, "fill", white); //然后对这个对象的属性进行更改
-          } else if (data.fill == white) {
-            myDiagram.model.setDataProperty(node, "fill", gray);
-          }
-          _this.updateStates();
+         
+          _this.changeStyle(data.key,data.fill)
+          _this.updateStates(data.key);
         }
       }
     );
@@ -1119,7 +1078,7 @@ export default {
     this.load();
 
     // continually update the diagram
-    this.loop();
+    //this.loop();
   },
   watch: {},
   computed: {},
@@ -1153,7 +1112,8 @@ export default {
           },
           mouseLeave: (e, obj) => {
             this.showPorts(obj.part, false);
-          }
+          },
+          click:this.clickNode
         }
       ];
     },
@@ -1216,28 +1176,29 @@ export default {
       a.download = "流程图";
       a.href = url;
       a.dispatchEvent(event);
-
-      document.getElementById(
-        "mySavedModel"
-      ).value = this.diagram.model.toJson();
-      localStorage.setItem(
-        "diagramData",
-        document.getElementById("mySavedModel").value
-      );
+      
+      this.modelData= this.diagram.model.toJson();
+      localStorage.setItem("diagramData",this.modelData);
+      // document.getElementById("mySavedModel").value = this.diagram.model.toJson();
+      // localStorage.setItem("diagramData",document.getElementById("mySavedModel").value);
       this.diagram.isModified = false;
     },
     load() {
       var diagramData = localStorage.getItem("diagramData");
       if (diagramData) {
+        this.modelData = diagramData
         this.diagram.model = go.Model.fromJson(diagramData);
       } else {
-        this.diagram.model = go.Model.fromJson(
-          document.getElementById("mySavedModel").value
-        );
+        this.diagram.model = go.Model.fromJson(this.modelData);
+        this.modelData = this.diagram.model.toJson()
       }
     },
     clear() {
       localStorage.clear();
+      this.diagram.model.nodeDataArray=[];
+      this.diagram.model.linkDataArray=[]
+      this.modelData = this.diagram.model.toJson()
+
     },
     loop() {
       var _this = this;
@@ -1246,40 +1207,40 @@ export default {
         _this.loop();
       }, 250);
     },
-    updateStates() {
+    changeStyle(key,fill){
+      var _this=this
+       var node = this.diagram.model.findNodeDataForKey(key); //首先拿到这个节点的对象
+          if (fill == _this.gray) {
+            this.diagram.model.setDataProperty(node, "fill", _this.white); //然后对这个对象的属性进行更改
+          } else if (fill == _this.white) {
+            this.diagram.model.setDataProperty(node, "fill", _this.gray);
+          }
+    },
+    updateStates(key) {
       var _this = this;
-      var oldskip = this.diagram.skipsUndoManager;
-      this.diagram.skipsUndoManager = true;
+      var oldskip = _this.diagram.skipsUndoManager;
+      _this.diagram.skipsUndoManager = true;
       // //连接线随着点击改变
-      // this.diagram.nodes.each(function(node) {
-      //     if (node.category === "triangle") {
+      // _this.diagram.nodes.each(function(node) {
+      //     if (node.category === "oilGrove") {
       //         _this.doInput(node);
       //     }
       // });
 
-      // // //相连的随着点击改变
-      // this.diagram.nodes.each(function(node) {
-      //     switch (node.category) {
-      //     case "htriangle": _this.doOutput(node); break;
-      //     case "triangle": break;  // doInput already called, above
-      //     }
-      // });
-      this.diagram.skipsUndoManager = oldskip;
+      // // //相关联的随着点击改变
+      console.log(key,'key')
+      _this.diagram.nodes.each(function(node) {
+       if(node.data.parent==key){
+         console.log(node.data,'node')
+         _this.changeStyle(node.data.key,node.data.fill)
+       }
+      });
+      _this.diagram.skipsUndoManager = oldskip;
     },
     doInput(node) {
       var _this = this;
       // the output is just the node's Shape.fill
       _this.setOutputLinks(node, node.findObject("NODESHAPE").fill);
-    },
-    doOutput(node) {
-      // assume there is just one input link
-      // we just need to update the node's Shape.fill
-      node.linksConnected.each(function(link) {
-        node.findObject("NODESHAPE").fill = link.findObject("SHAPE").stroke;
-      });
-      node.linksConnected.each(function(link) {
-        node.findObject("NODESHAPE2").fill = link.findObject("SHAPE").stroke;
-      });
     },
 
     // helper predicate
@@ -1293,6 +1254,37 @@ export default {
       node.findLinksOutOf().each(function(link) {
         link.findObject("SHAPE").stroke = color;
       });
+    },
+    clickNode(e,obj){
+      console.log("点击节点")
+      console.log(obj.part.data)
+      if(this.isBind){
+        if(this.checkList.length>0){
+          console.log("是否具有parent属性：",obj.part.data.hasOwnProperty('parent'))
+          if(obj.part.data.hasOwnProperty('parent')){
+            alert("已绑定！！！")
+          }else{
+            if(obj.part.data.key!=this.firstKey){
+                obj.part.data.parent=this.firstKey
+                this.checkList.push(obj.part.data)
+            }else{
+              alert("该节点无需进行绑定")
+            }
+
+          }
+        }else{
+          this.firstKey=obj.part.data.key
+          this.checkList.push(obj.part.data)
+        }
+        
+      }
+    },
+    bind(){
+      console.log("绑定关系")
+      this.isBind=true
+    },
+    bindComplete(){
+      this.isBind=false
     }
   }
 };
