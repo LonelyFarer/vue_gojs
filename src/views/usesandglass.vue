@@ -10,11 +10,11 @@
     </span>
 
     <div>
-      <button id="saveModel" @click="save()">Save</button>
-      <button @click="load()">Load</button>
-      <button @click="clear()">Clear</button>
-      <button @click="bind()">绑定</button>
-      <button @click="bindComplete()">完成绑定</button>
+      <el-button id="saveModel" @click="save()">Save</el-button>
+      <el-button @click="load()">Load</el-button>
+      <el-button @click="clear()">Clear</el-button>
+      <el-button @click="bind()">绑定</el-button>
+      <el-button @click="bindComplete()">完成绑定</el-button>
       <br />Diagram Model saved in JSON format:
     </div>
     <textarea
@@ -23,8 +23,8 @@
       v-model="modelData"
     ></textarea>
     <div style="display:flex;min-height:200px;">
-      <div style="width:100px;height:100px;border:1px solid red;margin-right:50px;"></div>
-      <div style="width:800px;height:100px;border:1px solid blue">
+      <!-- <div style="width:100px;height:100px;border:1px solid red;margin-right:50px;"></div> -->
+      <div style="width:100%;height:100px;border:1px solid blue">
         <div
           v-for="(item,index) in checkList"
           :key="index"
@@ -72,12 +72,13 @@ export default {
       png1_2: png1_2,
       circleText: "M",
       checkList: [],
-      firstKey: "",
+      parentKey: "",
       isBind: false,
       white: "white", // 0 or false
       gray: "#A0A0A0", // 1 or true
       black: "#000000",
-      red: "red"
+      red: "red",
+      clicknode:''
     };
   },
   mounted() {
@@ -120,7 +121,11 @@ export default {
       },
       new go.Binding("points").makeTwoWay(),
       new go.Binding("isShadowed", "isSelected").ofObject(),
-      $(go.Shape, { name: "SHAPE", strokeWidth: 2, stroke: gray })
+      $(go.Shape, { name: "SHAPE", strokeWidth: 2, stroke: gray }),
+
+      // $(go.Shape, { isPanelMain: true, stroke: "black", strokeWidth: 7 }),
+      // $(go.Shape, { isPanelMain: true, stroke: "gray", strokeWidth: 5 }),
+      // $(go.Shape, { isPanelMain: true, stroke: "white", strokeWidth: 3, name: "PIPE", strokeDashArray: [10, 10] }),
     );
 
     // define templates for each type of node
@@ -1091,6 +1096,53 @@ export default {
         }
       }
     );
+    // var groupTemplate=$(
+    //   go.Node,
+    //   "Spot",
+    //   this.nodeStyle(),
+    //    new go.Binding("location", "loc", go.Point.parse).makeTwoWay(go.Point.stringify),
+    //     $(go.Shape,  // using a Shape instead of a Placeholder
+    //     { name: "PH",
+    //       fill: "transparent",
+    //       stroke:"black" 
+    //     }
+    //     )
+    //   //$(go.TextBlock,new go.Binding("text", "key"))
+    // );
+    myDiagram.palettegroupTemplate =
+    $(go.Group, "Vertical",
+      new go.Binding("location", "loc", go.Point.parse).makeTwoWay(go.Point.stringify),
+      $(go.Shape,  // using a Shape instead of a Placeholder
+        { 
+          fill: "transparent",
+        },
+        new go.Binding("desiredSize", "size", go.Size.parse).makeTwoWay(go.Size.stringify))
+    );
+    myDiagram.groupTemplate =
+    $(go.Group, "Vertical",
+      { selectionObjectName: "PH",
+        locationObjectName: "PH",
+        resizable: true,
+        resizeObjectName: "PH" },
+      new go.Binding("location", "loc", go.Point.parse).makeTwoWay(go.Point.stringify),
+      { 
+          mouseEnter: function(e, grp, next) { grp.findObject("PH").stroke = "black" },
+          mouseLeave: function(e, grp, next) { grp.findObject("PH").stroke = "transparent" },
+          mouseDrop: function(e, grp) {
+            var ok = grp.addMembers(grp.diagram.selection, true);
+            if (!ok) grp.diagram.currentTool.doCancel();
+          }
+      },
+      // $(go.TextBlock,  // group title
+      //   { font: "Bold 12pt Sans-Serif" },
+      //   new go.Binding("text", "key")),
+      $(go.Shape,  // using a Shape instead of a Placeholder
+        { name: "PH",
+          fill: "transparent",
+          stroke:"transparent" 
+        },
+        new go.Binding("desiredSize", "size", go.Size.parse).makeTwoWay(go.Size.stringify))
+    );
     // add the templates created above to myDiagram and palette
     myDiagram.nodeTemplateMap.add("oilGroove", oilGroove);
     myDiagram.nodeTemplateMap.add("pressureGroove", pressureGroove);
@@ -1114,6 +1166,7 @@ export default {
     myDiagram.nodeTemplateMap.add("picture4", picture4);
     myDiagram.nodeTemplateMap.add("picture7", picture7);
     myDiagram.nodeTemplateMap.add("circleText", circleText);
+    
 
     let myPalette = $(
       go.Palette,
@@ -1121,6 +1174,7 @@ export default {
       {
         "animationManager.duration": 800, // slightly longer than default (600ms) animation
         nodeTemplateMap: myDiagram.nodeTemplateMap, // share the templates used by myDiagram
+        groupTemplate: myDiagram.palettegroupTemplate,
         model: new go.GraphLinksModel([
           // specify the contents of the Palette
           { category: "triangle", fill: gray },
@@ -1144,13 +1198,24 @@ export default {
           { category: "picture5", source: _this.png7 },
           { category: "picture4", source: _this.png6 },
           { category: "picture7", source: _this.png9 },
-          { category: "circleText", text: _this.circleText }
+          { category: "circleText", text: _this.circleText },
+          { category: "grouptemplate", isGroup:true,size: "50 50" }
         ])
       }
     );
     this.diagram = myDiagram;
     // load the initial diagram
     this.load();
+
+    //线动画效果
+    // var animation = new go.Animation();
+    // animation.easing = go.Animation.EaseLinear;
+    // myDiagram.links.each(function(link) {
+    //   animation.add(link.findObject("PIPE"), "strokeDashOffset", 20, 0)
+    // });
+    // // Run indefinitely
+    // animation.runCount = Infinity;
+    // animation.start();
 
     // continually update the diagram
     //this.loop();
@@ -1257,9 +1322,8 @@ export default {
 
       this.modelData = this.diagram.model.toJson();
       localStorage.setItem("diagramData", this.modelData);
-      // document.getElementById("mySavedModel").value = this.diagram.model.toJson();
-      // localStorage.setItem("diagramData",document.getElementById("mySavedModel").value);
       this.diagram.isModified = false;
+
     },
     load() {
       var diagramData = localStorage.getItem("diagramData");
@@ -1335,31 +1399,67 @@ export default {
     clickNode(e, obj) {
       console.log("点击节点");
       console.log(obj.part.data);
+      
       if (this.isBind) {
-        if (this.checkList.length > 0) {
+        // if (this.checkList.length > 0) {
           console.log(
             "是否具有parent属性：",
             obj.part.data.hasOwnProperty("parent")
           );
           if (obj.part.data.hasOwnProperty("parent")) {
-            alert("已绑定！！！");
-          } else {
-            if (obj.part.data.key != this.firstKey) {
-              obj.part.data.parent = this.firstKey;
-              this.checkList.push(obj.part.data);
+            this.$message({
+                message: '该节点已绑定！请重新选择需要绑定的节点',
+                type: 'warning'
+              });  
+          } else 
+          {
+            console.log(this.parentKey,'pppppp')
+            if (obj.part.data.key != this.parentKey) {
+              obj.part.data.parent = this.parentKey;
+               for(let item of this.checkList){
+                  if(this.checkList.indexOf(obj.part.data)===-1){
+                      this.checkList.push(obj.part.data);
+                  }
+                }
             } else {
-              alert("该节点无需进行绑定");
+              this.$message({
+                message: '该节点无需进行绑定',
+                type: 'warning'
+              });
             }
-          }
-        } else {
-          this.firstKey = obj.part.data.key;
-          this.checkList.push(obj.part.data);
-        }
+           }
+        // } 
+        // else { 
+        //   this.parentKey = obj.part.data.key;
+        //   this.checkList.push(obj.part.data);
+        // }
       }
     },
     bind() {
-      console.log("绑定关系");
-      this.isBind = true;
+      var _this = this;
+      var nodeOrLinkList=this.diagram.selection.first();
+      
+      if(nodeOrLinkList==null){
+        this.$message({
+          message: '请选择需要绑定的节点',
+          type: 'warning'
+        });
+      }else{
+        console.log(nodeOrLinkList.data,'22222222')
+        this.parentKey = nodeOrLinkList.data.key;
+        console.log(this.checkList,'checklist')
+        if(this.checkList.length==0){
+          this.checkList.push(nodeOrLinkList.data);
+        }
+         for(let item of this.checkList){
+            if(this.checkList.indexOf(nodeOrLinkList.data)===-1){
+              this.checkList.push(nodeOrLinkList.data);
+            }
+          }
+         console.log("绑定关系");
+        this.isBind = true;
+      }
+      
     },
     bindComplete() {
       this.isBind = false;
