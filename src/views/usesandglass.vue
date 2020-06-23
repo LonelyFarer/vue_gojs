@@ -1,13 +1,30 @@
 <template>
   <div style="width:90%; white-space:nowrap;margin:auto">
-    <span style="border: 1px solid gray;display: inline-block; vertical-align: top; width:220px;">
-      <div id="myPaletteDiv" style="height: 600px;"></div>
-    </span>
-    <span
-      style="border: 1px solid gray;display: inline-block; vertical-align: top;width:calc(100% - 220px)"
-    >
-      <div id="myDiagramDiv" style="height: 600px"></div>
-    </span>
+    <!-- <span style="border: 1px solid gray;display: inline-block; vertical-align: top; width:220px;"> -->
+
+      <div id="paletteDraggable" style="height:300px;margin-bottom:5px">
+        <div id="paletteDraggableHandle">Palette</div>
+        <div id="paletteContainer">
+          <div id="myPaletteDiv" style=""></div>
+        </div>
+      </div>
+      <!-- <div id="myPaletteDiv" style="height: 600px;"></div> -->
+    <!-- </span> -->
+
+    <div style="border: 1px solid gray; vertical-align: top;position:relative">
+      <div id="myDiagramDiv" style="height: 600px">
+
+      </div>
+
+       <div id="infoDraggable" class="draggable" style="display: inline-block; vertical-align: top; padding: 3px; top: 0px; left: 0px;">
+        <div id="infoDraggableHandle" class="handle">Info</div>
+        <div>
+        <div id="myInfo"></div>
+        </div>
+      </div>
+    </div>
+
+   
 
     <div>
       <el-button id="saveModel" @click="save()">Save</el-button>
@@ -32,6 +49,8 @@
         >{{item}}</div>
       </div>
     </div>
+
+    
   </div>
 </template>
 
@@ -93,6 +112,11 @@ export default {
       "undoManager.isEnabled": true
     });
 
+myDiagram.addDiagramListener("ChangedSelection", function(diagramEvent) {
+        var idrag = document.getElementById("infoDraggable");
+        idrag.style.width = "";
+        idrag.style.height = "";
+      });
     // myDiagram.addDiagramListener("Modified", function(e) {
     //   var button = document.getElementById("saveModel");
     //   if (button) button.disabled = !myDiagram.isModified;
@@ -1143,6 +1167,8 @@ export default {
         },
         new go.Binding("desiredSize", "size", go.Size.parse).makeTwoWay(go.Size.stringify))
     );
+      
+
     // add the templates created above to myDiagram and palette
     myDiagram.nodeTemplateMap.add("oilGroove", oilGroove);
     myDiagram.nodeTemplateMap.add("pressureGroove", pressureGroove);
@@ -1219,6 +1245,34 @@ export default {
 
     // continually update the diagram
     //this.loop();
+
+     myPalette.addDiagramListener("InitialLayoutCompleted", function(diagramEvent) {
+        var pdrag = document.getElementById("paletteDraggable");
+        var palette = diagramEvent.diagram;
+        // pdrag.style.width = palette.documentBounds.width + 28 + "px"; // account for padding/borders
+        // pdrag.style.height = palette.documentBounds.height + 38 + "px";
+      });
+      
+    
+      $(function() {
+        // $("#paletteDraggable").draggable({ handle: "#paletteDraggableHandle" }).resizable({
+        //   // After resizing, perform another layout to fit everything in the palette's viewport
+        //   stop: function() { myPalette.layoutDiagram(true); }
+        // });
+        var infoDraggable = document.getElementById("infoDraggable");
+        jQuery("#infoDraggable").draggable({ handle: "#infoDraggableHandle" });
+        var inspector = new Inspector('myInfo', myDiagram,
+          {
+            properties: {
+              // key would be automatically added for nodes, but we want to declare it read-only also:
+              "key": { readOnly: true, show: Inspector.showIfPresent },
+              // fill and stroke would be automatically added for nodes, but we want to declare it a color also:
+              "fill": { show: Inspector.showIfPresent, type: 'color' },
+              "stroke": { show: Inspector.showIfPresent, type: 'color' }
+            }
+          });
+      });
+     
   },
   watch: {},
   computed: {},
@@ -1467,6 +1521,51 @@ export default {
   }
 };
 </script>
+<style scoped type="text/css">
+.draggable {
+  /* display: inline-block;
+  vertical-align: top; */
+  border: 2px solid #BBB;
+  border-radius: 5px;
+  background-color: #F5F5F5;
+  position: absolute;
+  /* top: 375px;
+  left: 60px; */
+  z-index: 500;
+}
 
-<style>
+.handle {
+  background-color: lightblue;
+  cursor: move;
+  text-align: center;
+  font: bold 12px sans-serif;
+}
+ #infoDraggable {
+    font: 12px helvetica, sans-serif;
+    min-width: 213px;
+  }
+
+  #myInfo {
+    width: 100%;
+    overflow: hidden;
+  }
+
+  #myPaletteDiv {
+    background-color: #F5F5F5;
+    width: 100%;
+    height: 100%;
+  }
+
+  /*
+One simple way of making a div fill its space,
+with allowances for the title (top) and the resize handle (bottom)
+*/
+  #paletteContainer {
+    /* position: absolute;
+    bottom: 14px;
+    left: 0px;
+    right: 0px;
+    top: 14px; */
+    height:280px
+  }
 </style>
